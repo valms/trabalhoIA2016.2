@@ -35,6 +35,7 @@ public class Ladrao extends ProgramaLadrao {
 	private final int VISION_THIEF 		= 200;
 	
 	/**
+	 * TODO
 	 * VARIÁVEIS REPRESENTANDO OS VALORES DE FEROMÔNIO DO AGENTE-LADRÃO (VIDE
 	 * TABELA 02 DO MANUAL)
 	 */
