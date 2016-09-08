@@ -38,7 +38,6 @@ public class Ladrao extends ProgramaLadrao {
 	 * VARIÁVEIS REPRESENTANDO OS VALORES DE FEROMÔNIO DO AGENTE-LADRÃO (VIDE
 	 * TABELA 02 DO MANUAL)
 	 */
-
 	private final int PHEREOMONE_EMPTY 				= 0;
 	private final int PHEREOMONE_ONE_STEP_AGO 		= 1;
 	private final int PHEREOMONE_TWO_STEPS_AGO 		= 2;
@@ -49,11 +48,6 @@ public class Ladrao extends ProgramaLadrao {
 
 	public int acao() {
 
-		System.out.println(sensor.getPosicao());
-		// for (int i = 0; i < sensor.getVisaoIdentificacao().length; i++) {
-		// System.out.println();
-		// System.out.println(sensor.getVisaoIdentificacao()[i]);
-		// }
 		return (int) (Math.random() * 5);
 	}
 
