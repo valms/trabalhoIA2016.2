@@ -27,12 +27,12 @@ public class Ladrao extends ProgramaLadrao {
 	private final int VISION_BLIND 		= -2;
 	private final int VISION_OUTSIDE	= -1;
 	private final int VISION_EMPTY 		= 0;
-	private final int VISION_WALL 		= -2;
-	private final int VISION_BANK 		= -2;
-	private final int VISION_COIN 		= -2;
-	private final int VISION_POWER_UP 	= -2;
-	private final int VISION_SAVER 		= -2;
-	private final int VISION_THIEF 		= -2;
+	private final int VISION_WALL 		= 1;
+	private final int VISION_BANK 		= 3;
+	private final int VISION_COIN 		= 4;
+	private final int VISION_POWER_UP 	= 5;
+	private final int VISION_SAVER 		= 100;
+	private final int VISION_THIEF 		= 200;
 	
 	/**
 	 * VARIÁVEIS REPRESENTANDO OS VALORES DE FEROMÔNIO DO AGENTE-LADRÃO (VIDE
