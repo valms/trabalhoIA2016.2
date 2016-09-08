@@ -2,16 +2,16 @@ package algoritmo;
 
 /**
  * UNIVERSIDADE DE FORTALEZA - I.A. 2016.2
- * 
- * @author Valmar J˙nior - 1120793 / 6
- * @author Jo„o Pedro
+ *
+ * @author Valmar J√∫nior - 1120793 / 6
+ * @author Jo√£o Pedro
  *
  */
 @SuppressWarnings(value = { "all" })
 public class Ladrao extends ProgramaLadrao {
 
 	/**
-	 * VARI¡VEIS QUE CONTROLAM A A«√O DO AGENTE-LADR√O (VER P¡GINA 4 DO MANUAL
+	 * VARI√ÅVEIS QUE CONTROLAM A MOVIMENTA√á√ÉO DO AGENTE-LADR√ÉO (VER P√ÅGINA 4 DO MANUAL
 	 * DO JOGO)
 	 */
 	private final int MOVEMENT_PARADO 	= 0;
@@ -21,7 +21,7 @@ public class Ladrao extends ProgramaLadrao {
 	private final int MOVEMENT_LEFT 	= 4;
 
 	/**
-	 * VARI¡VEIS REPRESENTANDO OS VALORES DE OFALTO DO AGENTE-LADR√O (VIDE
+	 * VARI√ÅVEIS REPRESENTANDO OS VALORES DE OFALTO DO AGENTE-LADR√ÉO (VIDE
 	 * TABELA 01 DO MANUAL)
 	 */
 	private final int VISION_BLIND 		= -2;
@@ -33,10 +33,10 @@ public class Ladrao extends ProgramaLadrao {
 	private final int VISION_POWER_UP 	= 5;
 	private final int VISION_SAVER 		= 100;
 	private final int VISION_THIEF 		= 200;
-	
+
 	/**
 	 * TODO
-	 * VARI¡VEIS REPRESENTANDO OS VALORES DE FEROM‘NIO DO AGENTE-LADR√O (VIDE
+	 * VARI√ÅVEIS REPRESENTANDO OS VALORES DE FEROM√îNIO DO AGENTE-LADR√ÉO (VIDE
 	 * TABELA 02 DO MANUAL)
 	 */
 	private final int PHEREOMONE_EMPTY 				= 0;
@@ -45,7 +45,7 @@ public class Ladrao extends ProgramaLadrao {
 	private final int PHEREOMONE_THREE_STEPS_AGO 	= 3;
 	private final int PHEREOMONE_FOUR_STEPS_AGO 	= 4;
 	private final int PHEREOMONE_FIVE_STEPS_AGO 	= 5;
-	
+
 
 	public int acao() {
 
