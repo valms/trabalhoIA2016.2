@@ -28,11 +28,12 @@ class State {
 
 	private int moviment;
 
-	private Ladrao ladrao;
-	
+	private Ladrao thief;
+
+	private SensoresLadrao thiefSensors;
 
 	public State(int[] visionArray, int[] smellThiefArray, int[] smellSaverArray, int coins, Point point, int util,
-			int moviment) {
+			int moviment, SensoresLadrao ladrao) {
 
 		this.visionArray = visionArray;
 		this.smellThiefArray = smellThiefArray;
@@ -41,8 +42,9 @@ class State {
 		this.point = point;
 		this.util = util;
 		this.moviment = moviment;
+		this.thiefSensors = ladrao;
 
-		this.ladrao = new Ladrao();
+		this.thief = new Ladrao();
 	}
 
 	public int[] getVisionArray() {
@@ -102,9 +104,23 @@ class State {
 	}
 
 	public State newState(int moviment) {
-//		int visionArray = new int[]
+
+		int[] visionArray = new int[this.thiefSensors.getVisaoIdentificacao().length];
+		int[] smellSaverArray = new int[this.thiefSensors.getAmbienteOlfatoPoupador().length];
+		int[] smellThiefArray = new int[this.thiefSensors.getAmbienteOlfatoLadrao().length];
 
 		
+		
+		
+		System.arraycopy(this.thiefSensors.getVisaoIdentificacao(), 0, visionArray, 0,
+				this.thiefSensors.getVisaoIdentificacao().length);
+
+		System.arraycopy(this.thiefSensors.getAmbienteOlfatoPoupador(), 0, smellSaverArray, 0,
+				this.thiefSensors.getAmbienteOlfatoPoupador().length);
+
+		System.arraycopy(this.thiefSensors.getAmbienteOlfatoLadrao(), 0, smellThiefArray, 0,
+				this.thiefSensors.getAmbienteOlfatoLadrao().length);
+
 		return null;
 	}
 
