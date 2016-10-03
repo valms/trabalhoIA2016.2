@@ -11,115 +11,193 @@ import sun.management.resources.agent;
  * UNIVERSIDADE DE FORTALEZA - I.A. 2016.2
  *
  * @author Valmar Júnior - 1120793 / 6
- * @author João Pedro
+ * @author João Pedro - 1211207 / 6
  *
  */
 @SuppressWarnings(value = { "all" })
 public class Ladrao extends ProgramaLadrao {
 
-	/**
-	 * VARIÁVEIS QUE CONTROLAM A MOVIMENTAÇÃO DO AGENTE-LADRÃO (VER PÁGINA 4 DO
-	 * MANUAL DO JOGO)
-	 */
-	protected final int MOVEMENT_STOP 	= 0;
-	protected final int MOVEMENT_UP 	= 1;
-	protected final int MOVEMENT_DOWN 	= 2;
-	protected final int MOVEMENT_RIGHT 	= 3;
-	protected final int MOVEMENT_LEFT 	= 4;
+	int myLastAction 		= 0;
+	int visionMatrix[][] 	= new int[5][5];
+	int smellMatrix[][] 	= new int[3][3];
+	int matrixAlreadyVisited[][] = new int[30][30];
+	boolean chasing;
+	int coins;
+	int posObj;
+	Point myLastPos = new Point();
+	Point myNextPos = new Point();
+	boolean stopped;
+	boolean lookingBank;
+	int action;
+	Double front;
+	Double back;
+	Double right;
+	Double left;
+	int dBank;
+	int safetyZone;
+	Point posBank = new Point();
+	int[] pBank = new int[] { posBank.y, posBank.x };
+	int[] pAtual;
+	int outZone;
+	boolean discoveryBank = false;
 
-	/**
-	 * VARIÁVEIS REPRESENTANDO OS VALORES DE OFALTO DO AGENTE-LADRÃO (VIDE
-	 * TABELA 01 DO MANUAL)
-	 */
-	private final int VISION_BLIND 		= -2;
-	private final int VISION_OUTSIDE 	= -1;
-	private final int VISION_EMPTY 		= 0;
-	private final int VISION_WALL 		= 1;
-	private final int VISION_BANK 		= 3;
-	private final int VISION_COIN 		= 4;
-	private final int VISION_POWER_UP 	= 5;
-	private final int VISION_SAVER 		= 100;
-	private final int VISION_THIEF 		= 200;
+	int objective;
+	int obstacle;
+	int coin;
+	int emptySpace;
+	int mate;
+	int lastAction;
+	int wall;
+	int outOfWorld;
+	int bank;
+	int powerCoin;
+	int smellConstant;
+	int samePointIwas;
 
-	/**
-	 * VARIÁVEIS REPRESENTANDO OS VALORES DE FEROMÔNIO DO AGENTE-LADRÃO (VIDE
-	 * TABELA 02 DO MANUAL)
-	 */
-	private final int PHEREOMONE_EMPTY 				= 0;
-	private final int PHEREOMONE_ONE_STEP_AGO 		= 1;
-	private final int PHEREOMONE_TWO_STEPS_AGO		= 2;
-	private final int PHEREOMONE_THREE_STEPS_AGO 	= 3;
-	private final int PHEREOMONE_FOUR_STEPS_AGO 	= 4;
-	private final int PHEREOMONE_FIVE_STEPS_AGO 	= 5;
-	
-	
-	
-	int ultimaAcaoAgente 			= 0;
-	int matrizVisaoAgente[][] 		= new int[5][5];
-	int matrizOfaltoAgente[][] 		= new int[3][3];
-	int matrizCasasJáVisitadas[][] 	= new int[30][30];
-
-	/**
-	 * ADICIONANDO PESOS CONFORME A ORIENTAÇÃO DO RAFAEL NA ÚLTIMA AULA.
-	 * SEGUNDO ELE, O PESO AJUDA O AGENTE A DECIDIR O QUE É MELHOR FAZER NO STADO ATUAL
-	 */
-	private final int OBJETIVOS 	= 900;
-	private final int OBSTACULOS	= -1600;
-	private final int MOEDA 		= 1;
-	private final int ESPACO_VAZIO 	= 3;
-	private final int mate 			= 110;
-	private final int ULTIMA_ACAO 	= -350;
-	private final int wall 			= -2;
-	private final int outOfWorld 	= -3;
-	private final int bank 			= 1500;
-	private final int powerCoin 	= -1;
-	private final int smellConstant = 30;
-	private final int samePointIwas = -18;
-
-	@Override
 	public int acao() {
 
-		HashMap<Integer, Integer> hashMap 	= new HashMap<Integer, Integer>();
-		ArrayList<Integer> arrayList 		= new ArrayList<Integer>();
+		HashMap<Double, Integer> hmap = new HashMap<Double, Integer>();
+		ArrayList<Double> auxList = new ArrayList<Double>();
 
-		matrizVisaoAgente 	= getVisionMatrix();
-		matrizOfaltoAgente 	= getSmellMatrix();
+		pAtual = new int[] { sensor.getPosicao().y, sensor.getPosicao().x };
 
-		if (ultimaAcaoAgente == MOVEMENT_STOP) {
-			for (int i = 0; i < 30; i++) {
-				for (int j = 0; j < 30; j++) {
-					matrizCasasJáVisitadas[i][j] = 0;
-				}
-			}
+		front = 0d;
+		back = 0d;
+		right = 0d;
+		left = 0d;
+		safetyZone = 15;
+		outZone = -10000;
+		action = 0;
+		chasing = false;
+		stopped = false;
+		lookingBank = false;
 
+		visionMatrix = getVisionMatrix();
+		smellMatrix = getSmellMatrix();
+
+		System.out.println("\n" + this.hashCode());
+
+		ponderations();
+
+		myLastPos = sensor.getPosicao();
+
+		front = calculateTheFrontSide(visionMatrix, smellMatrix);
+		// System.out.println("Front:" + front);
+		back = calculateTheBackSide(visionMatrix, smellMatrix);
+		// System.out.println("Back:" + back);
+		right = calculateTheRightSide(visionMatrix, smellMatrix);
+		// System.out.println("Right:" + right);
+		left = calculateTheLeftSide(visionMatrix, smellMatrix);
+		// System.out.println("Left:" + left);
+
+		hmap.put(front, 1);
+		hmap.put(back, 2);
+		hmap.put(right, 3);
+		hmap.put(left, 4);
+
+		auxList.add(back);
+		auxList.add(right);
+		auxList.add(left);
+		auxList.add(front);
+
+		Collections.sort(auxList);
+
+		action = hmap.get(auxList.get(auxList.size() - 1));
+
+		if (sensor.getNumeroDeMoedas() > coins) {
+			coins = sensor.getNumeroDeMoedas();
 		}
 
-		hashMap.put(calculateTheFrontSide	(matrizVisaoAgente, matrizOfaltoAgente), 1);
-		hashMap.put(calculateTheBackSide	(matrizVisaoAgente, matrizOfaltoAgente), 2);
-		hashMap.put(calculateTheRightSide	(matrizVisaoAgente, matrizOfaltoAgente), 3);
-		hashMap.put(calculateTheLeftSide	(matrizVisaoAgente, matrizOfaltoAgente), 4);
+		System.out.print("Ação: " + action);
 
-		arrayList.add(calculateTheLeftSide	(matrizVisaoAgente, matrizOfaltoAgente));
-		arrayList.add(calculateTheRightSide	(matrizVisaoAgente, matrizOfaltoAgente));
-		arrayList.add(calculateTheBackSide	(matrizVisaoAgente, matrizOfaltoAgente));
-		arrayList.add(calculateTheFrontSide	(matrizVisaoAgente, matrizOfaltoAgente));
-
-		Collections.sort(arrayList);
-
-		int action = hashMap.get(arrayList.get(arrayList.size() - 1));
-		ultimaAcaoAgente = action;
+		myLastAction = action;
 
 		includeVisitedPoint(action);
+
+		System.out.print(" - ");
+
+		switch (action) {
+		case 1:
+			System.out.println("Front");
+			break;
+		case 2:
+			System.out.println("Back");
+			break;
+		case 3:
+			System.out.println("Right");
+			break;
+		case 4:
+			System.out.println("Left");
+			break;
+		default:
+			break;
+		}
+
+		System.out.println("Thief x: " + pAtual[1] + " y: " + pAtual[0]);
+
+		System.out.println("Bank x: " + pBank[1] + " x: " + pBank[0]);
 
 		return action;
 	}
 
-	public int calculateTheFrontSide(int[][] matrixVision, int[][] matrixSmell) {
-		int sum = 0;
+	public void ponderations() {
+
+		if (chasing) {
+
+			objective = 500;
+			obstacle = -100;
+			coin = 0;
+			emptySpace = 0;
+			mate = 0;
+			lastAction = 0;
+			wall = 0;
+			outOfWorld = 0;
+			bank = 100;
+			powerCoin = 0;
+			smellConstant = 100;
+			samePointIwas = 0;
+
+			System.out.println("\n" + this.hashCode() + " ----------------- Modo Chasing");
+		} else {
+
+			objective = 0;
+			obstacle = -200;
+			coin = -2;
+			emptySpace = 5;
+			mate = 0;
+			lastAction = -30;
+			wall = -10;
+			outOfWorld = -5;
+			bank = 150;
+			powerCoin = 3;
+			smellConstant = 100;
+			samePointIwas = -30;
+
+			System.out.println("\n" + this.hashCode() + " ---------------- Modo Searching");
+		}
+
+		if (myLastPos.equals(sensor.getPosicao())) {
+			// System.out.println("---------------------Preso");
+			emptySpace = 500;
+			wall = -100;
+		}
+
+		if (lookingBank && chasing) {
+			samePointIwas = 0;
+		}
+
+		if (lookingBank || chasing) {
+			mate = 100;
+			bank = 200;
+		}
+
+	}
+
+	public Double calculateTheFrontSide(int[][] matrixVision, int[][] matrixSmell) {
+		Double sum = 0d;
 
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 5; j++) {
-				// ADICIONAR O VALOR DA PAREDE CASO TENHA UM LADRAO A FRENTE.
 				sum += getTheValueOfTheConst(matrixVision[i][j]);
 			}
 
@@ -128,29 +206,34 @@ public class Ladrao extends ProgramaLadrao {
 		for (int i = 0; i < 1; i++) {
 			for (int j = 0; j < 3; j++) {
 
-				if (matrixSmell[i][j] != 0)
+				if (matrixSmell[i][j] > 1) {
 					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
+					// System.out.println("smell front" + (1.0 /
+					// matrixSmell[i][j]) * smellConstant);
+				}
 			}
 
 		}
 
-		if (matrixVision[1][2] != 0)
-			sum += OBSTACULOS;
-
-		if (matrixVision[1][2] >= 100 && matrixVision[1][2] < 200)
-			sum -= OBSTACULOS;
-
-		if (ultimaAcaoAgente == 2)
-			sum += ULTIMA_ACAO;
+		if (matrixVision[1][2] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
+			sum += obstacle;
 
 		sum += (getTimesIVisitedThisPoint(1) * samePointIwas);
 
+		if (discoveryBank) {
+			dBank = distanceManhattan(pAtual[0] - 1, pAtual[1], pBank[0], pBank[1]);
+
+			// System.out.println("Distancia Cima " + dBank);
+
+			if (dBank > safetyZone)
+				sum += outZone;
+		}
 		return sum;
 
 	}
 
-	public int calculateTheBackSide(int[][] matrixVision, int[][] matrixSmell) {
-		int sum = 0;
+	public Double calculateTheBackSide(int[][] matrixVision, int[][] matrixSmell) {
+		Double sum = 0d;
 
 		for (int i = 3; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {
@@ -162,31 +245,40 @@ public class Ladrao extends ProgramaLadrao {
 
 		for (int i = 2; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
-
-				if (matrixSmell[i][j] != 0)
+				// System.out.println(matrixSmell[i][j]);
+				if (matrixSmell[i][j] > 1) {
 					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
+					// System.out.println("smell back" + (1.0 /
+					// matrixSmell[i][j]) * smellConstant);
+				}
 			}
 
 		}
 
-		if (matrixVision[3][2] != 0)
-			sum += OBSTACULOS;
+		if (matrixVision[3][2] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
+			sum += obstacle;
 
-		if ((matrixVision[3][2] >= 100 && matrixVision[3][2] < 200))
-			sum -= OBSTACULOS;
-
-		if (ultimaAcaoAgente == 1)
-			sum += ULTIMA_ACAO;
+		if (myLastAction == 1)
+			sum += lastAction;
 
 		sum += getTimesIVisitedThisPoint(2) * samePointIwas;
+
+		if (discoveryBank) {
+			dBank = distanceManhattan(pAtual[0] + 1, pAtual[1], pBank[0], pBank[1]);
+
+			// System.out.println("Distancia Baixo " + dBank);
+
+			if (dBank > safetyZone)
+				sum += outZone;
+		}
 
 		return sum;
 	}
 
-	public int calculateTheLeftSide(int[][] matrixVision, int[][] matrixSmell) {
-		int sum = 0;
+	public Double calculateTheLeftSide(int[][] matrixVision, int[][] matrixSmell) {
+		Double sum = 0d;
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 1; i < 4; i++) {
 			for (int j = 0; j < 2; j++) {
 
 				sum += getTheValueOfTheConst(matrixVision[i][j]);
@@ -197,31 +289,39 @@ public class Ladrao extends ProgramaLadrao {
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 1; j++) {
 
-				if (matrixSmell[i][j] != 0)
+				if (matrixSmell[i][j] > 1) {
 					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
+					// System.out.println("smell left" + (1.0 /
+					// matrixSmell[i][j]) * smellConstant);
+				}
 			}
 
 		}
 
-		if (matrixVision[2][1] != 0)
-			sum += OBSTACULOS;
+		if (matrixVision[2][1] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
+			sum += obstacle;
 
-		if ((matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
-			sum -= OBSTACULOS;
-
-		if (ultimaAcaoAgente == 3)
-			sum += ULTIMA_ACAO;
+		if (myLastAction == 3)
+			sum += lastAction;
 
 		sum += getTimesIVisitedThisPoint(4) * samePointIwas;
+
+		if (discoveryBank) {
+			dBank = distanceManhattan(pAtual[0], pAtual[1] - 1, pBank[0], pBank[1]);
+			// System.out.println("Distancia Esquerda " + dBank);
+			if (dBank > safetyZone)
+				sum += outZone;
+
+		}
 
 		return sum;
 
 	}
 
-	public int calculateTheRightSide(int[][] matrixVision, int[][] matrixSmell) {
-		int sum = 0;
+	public Double calculateTheRightSide(int[][] matrixVision, int[][] matrixSmell) {
+		Double sum = 0d;
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 1; i < 4; i++) {
 			for (int j = 3; j < 5; j++) {
 
 				sum += getTheValueOfTheConst(matrixVision[i][j]);
@@ -232,22 +332,29 @@ public class Ladrao extends ProgramaLadrao {
 		for (int i = 0; i < 3; i++) {
 			for (int j = 2; j < 3; j++) {
 
-				if (matrixSmell[i][j] != 0)
+				if (matrixSmell[i][j] > 1) {
 					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
+					// System.out.println("smell right" + (1.0 /
+					// matrixSmell[i][j]) * smellConstant);
+				}
 			}
 
 		}
 
-		if (matrixVision[2][3] != 0)
-			sum += OBSTACULOS;
+		if (matrixVision[2][3] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
+			sum += obstacle;
 
-		if ((matrixVision[2][3] >= 100 && matrixVision[2][3] < 200))
-			sum -= OBSTACULOS;
-
-		if (ultimaAcaoAgente == 4)
-			sum += ULTIMA_ACAO;
+		if (myLastAction == 4)
+			sum += lastAction;
 
 		sum += getTimesIVisitedThisPoint(3) * samePointIwas;
+
+		if (discoveryBank) {
+			dBank = distanceManhattan(pAtual[0], pAtual[1] + 1, pBank[0], pBank[1]);
+			// System.out.println("Distancia Direita " + dBank);
+			if (dBank > safetyZone)
+				sum += outZone;
+		}
 
 		return sum;
 
@@ -256,16 +363,16 @@ public class Ladrao extends ProgramaLadrao {
 	public int getTheValueOfTheConst(int f) {
 
 		if (f == 0)
-			return ESPACO_VAZIO;
+			return emptySpace;
 
 		if (f >= 100 && f < 200)
-			return OBJETIVOS;
+			return objective;
 
 		if (f >= 200 && f < 300)
 			return mate;
 
 		if (f == 4)
-			return MOEDA;
+			return coin;
 
 		if (f == -2)
 			return wall;
@@ -275,7 +382,6 @@ public class Ladrao extends ProgramaLadrao {
 
 		if (f == 3)
 			return bank;
-		
 		if (f == 5)
 			return powerCoin;
 
@@ -287,14 +393,30 @@ public class Ladrao extends ProgramaLadrao {
 		int array[] = new int[24];
 
 		array = sensor.getVisaoIdentificacao();
-		System.out.println(array.length);
+
 		int indexArray = 0;
 
 		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 5; j++) {
 
+				if ((array[indexArray] >= 100 && array[indexArray] < 200))
+					chasing = true;
+				if (array[indexArray] == 3) {
+					lookingBank = true;
+
+					if (!discoveryBank) {
+
+						pBank[0] = pAtual[0] + (i - 2);
+						pBank[1] = pAtual[1] + (j - 2);
+
+						discoveryBank = true;
+
+					}
+
+				}
+
 				if (indexArray == 12) {
-					conversionMatrix[i][j] = 100;
+					// System.out.println(conversionMatrix[i][j]);
 					j++;
 					conversionMatrix[i][j] = array[indexArray];
 					indexArray++;
@@ -315,14 +437,14 @@ public class Ladrao extends ProgramaLadrao {
 		int array[] = new int[8];
 
 		array = sensor.getAmbienteOlfatoLadrao();
-		System.out.println(array.length);
+
 		int indexArray = 0;
 
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++) {
 
 				if (indexArray == 4) {
-					conversionMatrix[i][j] = 100;
+					// System.out.println(conversionMatrix[i][j]);
 					j++;
 					conversionMatrix[i][j] = array[indexArray];
 					indexArray++;
@@ -368,7 +490,7 @@ public class Ladrao extends ProgramaLadrao {
 		int y = (int) (sensor.getPosicao().getX() + matrixHash[i][j].getY());
 
 		if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
-			matrizCasasJáVisitadas[x][y]++;
+			matrixAlreadyVisited[x][y]++;
 
 	}
 
@@ -403,8 +525,12 @@ public class Ladrao extends ProgramaLadrao {
 		int y = (int) (sensor.getPosicao().getX() + matrixHash[i][j].getY());
 
 		if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
-			return matrizCasasJáVisitadas[x][y];
+			return matrixAlreadyVisited[x][y];
 		else
 			return 0;
+	}
+
+	public int distanceManhattan(int x1, int y1, int x2, int y2) {
+		return (Math.abs(x1 - x2) + Math.abs(y1 - y2));
 	}
 }
