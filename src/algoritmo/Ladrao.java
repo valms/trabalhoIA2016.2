@@ -1,536 +1,514 @@
 package algoritmo;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-
-import sun.management.resources.agent;
 
 /**
  * UNIVERSIDADE DE FORTALEZA - I.A. 2016.2
  *
  * @author Valmar Júnior - 1120793 / 6
  * @author João Pedro - 1211207 / 6
- *
  */
-@SuppressWarnings(value = { "all" })
+@SuppressWarnings(value = {"all"})
 public class Ladrao extends ProgramaLadrao {
 
-	int myLastAction 		= 0;
-	int visionMatrix[][] 	= new int[5][5];
-	int smellMatrix[][] 	= new int[3][3];
-	int matrixAlreadyVisited[][] = new int[30][30];
-	boolean chasing;
-	int coins;
-	int posObj;
-	Point myLastPos = new Point();
-	Point myNextPos = new Point();
-	boolean stopped;
-	boolean lookingBank;
-	int action;
-	Double front;
-	Double back;
-	Double right;
-	Double left;
-	int dBank;
-	int safetyZone;
-	Point posBank = new Point();
-	int[] pBank = new int[] { posBank.y, posBank.x };
-	int[] pAtual;
-	int outZone;
-	boolean discoveryBank = false;
-
-	int objective;
-	int obstacle;
-	int coin;
-	int emptySpace;
-	int mate;
-	int lastAction;
-	int wall;
-	int outOfWorld;
-	int bank;
-	int powerCoin;
-	int smellConstant;
-	int samePointIwas;
-
-	public int acao() {
-
-		HashMap<Double, Integer> hmap = new HashMap<Double, Integer>();
-		ArrayList<Double> auxList = new ArrayList<Double>();
-
-		pAtual = new int[] { sensor.getPosicao().y, sensor.getPosicao().x };
-
-		front = 0d;
-		back = 0d;
-		right = 0d;
-		left = 0d;
-		safetyZone = 15;
-		outZone = -10000;
-		action = 0;
-		chasing = false;
-		stopped = false;
-		lookingBank = false;
-
-		visionMatrix = getVisionMatrix();
-		smellMatrix = getSmellMatrix();
-
-		System.out.println("\n" + this.hashCode());
-
-		ponderations();
-
-		myLastPos = sensor.getPosicao();
-
-		front = calculateTheFrontSide(visionMatrix, smellMatrix);
-		// System.out.println("Front:" + front);
-		back = calculateTheBackSide(visionMatrix, smellMatrix);
-		// System.out.println("Back:" + back);
-		right = calculateTheRightSide(visionMatrix, smellMatrix);
-		// System.out.println("Right:" + right);
-		left = calculateTheLeftSide(visionMatrix, smellMatrix);
-		// System.out.println("Left:" + left);
-
-		hmap.put(front, 1);
-		hmap.put(back, 2);
-		hmap.put(right, 3);
-		hmap.put(left, 4);
-
-		auxList.add(back);
-		auxList.add(right);
-		auxList.add(left);
-		auxList.add(front);
-
-		Collections.sort(auxList);
-
-		action = hmap.get(auxList.get(auxList.size() - 1));
-
-		if (sensor.getNumeroDeMoedas() > coins) {
-			coins = sensor.getNumeroDeMoedas();
-		}
-
-		System.out.print("Ação: " + action);
-
-		myLastAction = action;
-
-		includeVisitedPoint(action);
-
-		System.out.print(" - ");
-
-		switch (action) {
-		case 1:
-			System.out.println("Front");
-			break;
-		case 2:
-			System.out.println("Back");
-			break;
-		case 3:
-			System.out.println("Right");
-			break;
-		case 4:
-			System.out.println("Left");
-			break;
-		default:
-			break;
-		}
-
-		System.out.println("Thief x: " + pAtual[1] + " y: " + pAtual[0]);
-
-		System.out.println("Bank x: " + pBank[1] + " x: " + pBank[0]);
-
-		return action;
-	}
-
-	public void ponderations() {
-
-		if (chasing) {
-
-			objective = 500;
-			obstacle = -100;
-			coin = 0;
-			emptySpace = 0;
-			mate = 0;
-			lastAction = 0;
-			wall = 0;
-			outOfWorld = 0;
-			bank = 100;
-			powerCoin = 0;
-			smellConstant = 100;
-			samePointIwas = 0;
-
-			System.out.println("\n" + this.hashCode() + " ----------------- Modo Chasing");
-		} else {
-
-			objective = 0;
-			obstacle = -200;
-			coin = -2;
-			emptySpace = 5;
-			mate = 0;
-			lastAction = -30;
-			wall = -10;
-			outOfWorld = -5;
-			bank = 150;
-			powerCoin = 3;
-			smellConstant = 100;
-			samePointIwas = -30;
-
-			System.out.println("\n" + this.hashCode() + " ---------------- Modo Searching");
-		}
-
-		if (myLastPos.equals(sensor.getPosicao())) {
-			// System.out.println("---------------------Preso");
-			emptySpace = 500;
-			wall = -100;
-		}
+    int ultimaAcaoAgente = 0;
+    int matrizVisao[][] = new int[5][5];
+    int matrizOfalto[][] = new int[3][3];
+    int matrizLocaisVisiatados[][] = new int[30][30];
+    boolean persinguindo;
+    int moedas;
+    int posObj;
+    Point ultimaPosicaoAgente = new Point();
+    Point proximaPosicaoAgente = new Point();
+    boolean parado;
+    boolean procurandoBanco;
+    int acao;
+    Double frente;
+    Double atras;
+    Double direita;
+    Double esquerda;
+    int dBank;
+    int zonaSegura;
+    Point posBank = new Point();
+    int[] pBank = new int[]{posBank.y, posBank.x};
+    int[] pAtual;
+    int foraDaZona;
+    boolean descubriuBanco = false;
+
+    int objetivo;
+    int obstaculo;
+    int moeda;
+    int espacoVazio;
+    int aliado;
+    int ultimaAcao;
+    int parede;
+    int foraMundo;
+    int banco;
+    int pastilhaPoder;
+    int constanteOfalto;
+    int ultimoPonto;
+
+    public int acao() {
+
+        HashMap<Double, Integer> hmap = new HashMap<Double, Integer>();
+        ArrayList<Double> auxList = new ArrayList<Double>();
+
+        pAtual = new int[]{sensor.getPosicao().y, sensor.getPosicao().x};
+
+        frente = 0d;
+        atras = 0d;
+        direita = 0d;
+        esquerda = 0d;
+        zonaSegura = 15;
+        foraDaZona = -10000;
+        acao = 0;
+        persinguindo = false;
+        parado = false;
+        procurandoBanco = false;
+
+        matrizVisao = getMatrizVisao();
+        matrizOfalto = getMatrizOfalto();
+
+        System.out.println("\n" + this.hashCode());
+
+        ponderacoes();
+
+        ultimaPosicaoAgente = sensor.getPosicao();
+
+        frente = calcularFrente(matrizVisao, matrizOfalto);
+        atras = calcularAtras(matrizVisao, matrizOfalto);
+        direita = calcularDireita(matrizVisao, matrizOfalto);
+        esquerda = calcularEsquerda(matrizVisao, matrizOfalto);
+
+        hmap.put(frente, 1);
+        hmap.put(atras, 2);
+        hmap.put(direita, 3);
+        hmap.put(esquerda, 4);
+
+        auxList.add(atras);
+        auxList.add(direita);
+        auxList.add(esquerda);
+        auxList.add(frente);
+
+        Collections.sort(auxList);
+
+        acao = hmap.get(auxList.get(auxList.size() - 1));
+
+        if (sensor.getNumeroDeMoedas() > moedas) {
+            moedas = sensor.getNumeroDeMoedas();
+        }
+
+        System.out.print("Ação: " + acao);
+
+        ultimaAcaoAgente = acao;
+
+        incrementaPontoVisitado(acao);
+
+        System.out.print(" - ");
+
+        switch (acao) {
+            case 1:
+                System.out.println("Frente");
+                break;
+            case 2:
+                System.out.println("Atras");
+                break;
+            case 3:
+                System.out.println("Direita");
+                break;
+            case 4:
+                System.out.println("Esquerda");
+                break;
+            default:
+                break;
+        }
 
-		if (lookingBank && chasing) {
-			samePointIwas = 0;
-		}
+        System.out.println("Ladrao x: " + pAtual[1] + " y: " + pAtual[0]);
+
+        System.out.println("Banco x: " + pBank[1] + " x: " + pBank[0]);
 
-		if (lookingBank || chasing) {
-			mate = 100;
-			bank = 200;
-		}
+        return acao;
+    }
 
-	}
+    public void ponderacoes() {
 
-	public Double calculateTheFrontSide(int[][] matrixVision, int[][] matrixSmell) {
-		Double sum = 0d;
-
-		for (int i = 0; i < 2; i++) {
-			for (int j = 0; j < 5; j++) {
-				sum += getTheValueOfTheConst(matrixVision[i][j]);
-			}
+        if (persinguindo) {
 
-		}
+            objetivo = 500;
+            obstaculo = -100;
+            moeda = 0;
+            espacoVazio = 0;
+            aliado = 0;
+            ultimaAcao = 0;
+            parede = 0;
+            foraMundo = 0;
+            banco = 100;
+            pastilhaPoder = 0;
+            constanteOfalto = 100;
+            ultimoPonto = 0;
 
-		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 3; j++) {
+            System.out.println("\n" + this.hashCode() + " ----------------- Modo Chasing");
 
-				if (matrixSmell[i][j] > 1) {
-					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
-					// System.out.println("smell front" + (1.0 /
-					// matrixSmell[i][j]) * smellConstant);
-				}
-			}
+        } else {
 
-		}
+            objetivo = 0;
+            obstaculo = -200;
+            moeda = -2;
+            espacoVazio = 5;
+            aliado = 0;
+            ultimaAcao = -30;
+            parede = -10;
+            foraMundo = -5;
+            banco = 150;
+            pastilhaPoder = 3;
+            constanteOfalto = 100;
+            ultimoPonto = -30;
 
-		if (matrixVision[1][2] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
-			sum += obstacle;
+            System.out.println("\n" + this.hashCode() + " ---------------- Modo Searching");
+        }
 
-		sum += (getTimesIVisitedThisPoint(1) * samePointIwas);
+        if (ultimaPosicaoAgente.equals(sensor.getPosicao())) {
+            espacoVazio = 500;
+            parede = -100;
+        }
 
-		if (discoveryBank) {
-			dBank = distanceManhattan(pAtual[0] - 1, pAtual[1], pBank[0], pBank[1]);
+        if (procurandoBanco && persinguindo) {
+            ultimoPonto = 0;
+        }
 
-			// System.out.println("Distancia Cima " + dBank);
+        if (procurandoBanco || persinguindo) {
+            aliado = 100;
+            banco = 200;
+        }
 
-			if (dBank > safetyZone)
-				sum += outZone;
-		}
-		return sum;
+    }
 
-	}
+    public Double calcularFrente(int[][] matrizVisao, int[][] matrizCheiro) {
+        Double sum = 0d;
 
-	public Double calculateTheBackSide(int[][] matrixVision, int[][] matrixSmell) {
-		Double sum = 0d;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 5; j++) {
+                sum += buscarValorConstante(matrizVisao[i][j]);
+            }
 
-		for (int i = 3; i < 5; i++) {
-			for (int j = 0; j < 5; j++) {
+        }
 
-				sum += getTheValueOfTheConst(matrixVision[i][j]);
-			}
+        for (int i = 0; i < 1; i++) {
+            for (int j = 0; j < 3; j++) {
 
-		}
+                if (matrizCheiro[i][j] > 1) {
+                    sum += (1.0 / matrizCheiro[i][j]) * constanteOfalto;
+                }
+            }
 
-		for (int i = 2; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				// System.out.println(matrixSmell[i][j]);
-				if (matrixSmell[i][j] > 1) {
-					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
-					// System.out.println("smell back" + (1.0 /
-					// matrixSmell[i][j]) * smellConstant);
-				}
-			}
+        }
 
-		}
+        if (matrizVisao[1][2] != 0 && !(matrizVisao[2][1] >= 100 && matrizVisao[2][1] < 200))
+            sum += obstaculo;
 
-		if (matrixVision[3][2] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
-			sum += obstacle;
+        sum += (getQuantidadeVezesVisitadoPonto(1) * ultimoPonto);
 
-		if (myLastAction == 1)
-			sum += lastAction;
+        if (descubriuBanco) {
+            dBank = distanceManhattan(pAtual[0] - 1, pAtual[1], pBank[0], pBank[1]);
 
-		sum += getTimesIVisitedThisPoint(2) * samePointIwas;
 
-		if (discoveryBank) {
-			dBank = distanceManhattan(pAtual[0] + 1, pAtual[1], pBank[0], pBank[1]);
+            if (dBank > zonaSegura)
+                sum += foraDaZona;
+        }
+        return sum;
 
-			// System.out.println("Distancia Baixo " + dBank);
+    }
 
-			if (dBank > safetyZone)
-				sum += outZone;
-		}
+    public Double calcularAtras(int[][] matrizVisao, int[][] matrizCheiro) {
+        Double sum = 0d;
 
-		return sum;
-	}
+        for (int i = 3; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
 
-	public Double calculateTheLeftSide(int[][] matrixVision, int[][] matrixSmell) {
-		Double sum = 0d;
+                sum += buscarValorConstante(matrizVisao[i][j]);
+            }
 
-		for (int i = 1; i < 4; i++) {
-			for (int j = 0; j < 2; j++) {
+        }
 
-				sum += getTheValueOfTheConst(matrixVision[i][j]);
-			}
+        for (int i = 2; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (matrizCheiro[i][j] > 1) {
+                    sum += (1.0 / matrizCheiro[i][j]) * constanteOfalto;
+                }
+            }
 
-		}
+        }
 
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 1; j++) {
+        if (matrizVisao[3][2] != 0 && !(matrizVisao[2][1] >= 100 && matrizVisao[2][1] < 200))
+            sum += obstaculo;
 
-				if (matrixSmell[i][j] > 1) {
-					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
-					// System.out.println("smell left" + (1.0 /
-					// matrixSmell[i][j]) * smellConstant);
-				}
-			}
+        if (ultimaAcaoAgente == 1)
+            sum += ultimaAcao;
 
-		}
+        sum += getQuantidadeVezesVisitadoPonto(2) * ultimoPonto;
 
-		if (matrixVision[2][1] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
-			sum += obstacle;
+        if (descubriuBanco) {
+            dBank = distanceManhattan(pAtual[0] + 1, pAtual[1], pBank[0], pBank[1]);
 
-		if (myLastAction == 3)
-			sum += lastAction;
+            if (dBank > zonaSegura)
+                sum += foraDaZona;
+        }
 
-		sum += getTimesIVisitedThisPoint(4) * samePointIwas;
+        return sum;
+    }
 
-		if (discoveryBank) {
-			dBank = distanceManhattan(pAtual[0], pAtual[1] - 1, pBank[0], pBank[1]);
-			// System.out.println("Distancia Esquerda " + dBank);
-			if (dBank > safetyZone)
-				sum += outZone;
+    public Double calcularEsquerda(int[][] matrizVisao, int[][] matrizCheiro) {
+        Double sum = 0d;
 
-		}
+        for (int i = 1; i < 4; i++) {
+            for (int j = 0; j < 2; j++) {
 
-		return sum;
+                sum += buscarValorConstante(matrizVisao[i][j]);
+            }
 
-	}
+        }
 
-	public Double calculateTheRightSide(int[][] matrixVision, int[][] matrixSmell) {
-		Double sum = 0d;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 1; j++) {
 
-		for (int i = 1; i < 4; i++) {
-			for (int j = 3; j < 5; j++) {
+                if (matrizCheiro[i][j] > 1) {
+                    sum += (1.0 / matrizCheiro[i][j]) * constanteOfalto;
+                }
+            }
 
-				sum += getTheValueOfTheConst(matrixVision[i][j]);
-			}
+        }
 
-		}
+        if (matrizVisao[2][1] != 0 && !(matrizVisao[2][1] >= 100 && matrizVisao[2][1] < 200))
+            sum += obstaculo;
 
-		for (int i = 0; i < 3; i++) {
-			for (int j = 2; j < 3; j++) {
+        if (ultimaAcaoAgente == 3)
+            sum += ultimaAcao;
 
-				if (matrixSmell[i][j] > 1) {
-					sum += (1.0 / matrixSmell[i][j]) * smellConstant;
-					// System.out.println("smell right" + (1.0 /
-					// matrixSmell[i][j]) * smellConstant);
-				}
-			}
+        sum += getQuantidadeVezesVisitadoPonto(4) * ultimoPonto;
 
-		}
+        if (descubriuBanco) {
+            dBank = distanceManhattan(pAtual[0], pAtual[1] - 1, pBank[0], pBank[1]);
+            if (dBank > zonaSegura)
+                sum += foraDaZona;
 
-		if (matrixVision[2][3] != 0 && !(matrixVision[2][1] >= 100 && matrixVision[2][1] < 200))
-			sum += obstacle;
+        }
 
-		if (myLastAction == 4)
-			sum += lastAction;
+        return sum;
 
-		sum += getTimesIVisitedThisPoint(3) * samePointIwas;
+    }
 
-		if (discoveryBank) {
-			dBank = distanceManhattan(pAtual[0], pAtual[1] + 1, pBank[0], pBank[1]);
-			// System.out.println("Distancia Direita " + dBank);
-			if (dBank > safetyZone)
-				sum += outZone;
-		}
+    public Double calcularDireita(int[][] matrizVisao, int[][] matrizCheiro) {
+        Double sum = 0d;
 
-		return sum;
+        for (int i = 1; i < 4; i++) {
+            for (int j = 3; j < 5; j++) {
 
-	}
+                sum += buscarValorConstante(matrizVisao[i][j]);
+            }
 
-	public int getTheValueOfTheConst(int f) {
+        }
 
-		if (f == 0)
-			return emptySpace;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 2; j < 3; j++) {
 
-		if (f >= 100 && f < 200)
-			return objective;
+                if (matrizCheiro[i][j] > 1) {
+                    sum += (1.0 / matrizCheiro[i][j]) * constanteOfalto;
+                }
+            }
 
-		if (f >= 200 && f < 300)
-			return mate;
+        }
 
-		if (f == 4)
-			return coin;
+        if (matrizVisao[2][3] != 0 && !(matrizVisao[2][1] >= 100 && matrizVisao[2][1] < 200))
+            sum += obstaculo;
 
-		if (f == -2)
-			return wall;
+        if (ultimaAcaoAgente == 4)
+            sum += ultimaAcao;
 
-		if (f == -1)
-			return outOfWorld;
+        sum += getQuantidadeVezesVisitadoPonto(3) * ultimoPonto;
 
-		if (f == 3)
-			return bank;
-		if (f == 5)
-			return powerCoin;
+        if (descubriuBanco) {
+            dBank = distanceManhattan(pAtual[0], pAtual[1] + 1, pBank[0], pBank[1]);
+            if (dBank > zonaSegura)
+                sum += foraDaZona;
+        }
 
-		return 0;
-	}
+        return sum;
 
-	public int[][] getVisionMatrix() {
-		int conversionMatrix[][] = new int[5][5];
-		int array[] = new int[24];
+    }
 
-		array = sensor.getVisaoIdentificacao();
+    public int buscarValorConstante(int f) {
 
-		int indexArray = 0;
+        if (f == 0)
+            return espacoVazio;
 
-		for (int i = 0; i < 5; i++) {
-			for (int j = 0; j < 5; j++) {
+        if (f >= 100 && f < 200)
+            return objetivo;
 
-				if ((array[indexArray] >= 100 && array[indexArray] < 200))
-					chasing = true;
-				if (array[indexArray] == 3) {
-					lookingBank = true;
+        if (f >= 200 && f < 300)
+            return aliado;
 
-					if (!discoveryBank) {
+        if (f == 4)
+            return moeda;
 
-						pBank[0] = pAtual[0] + (i - 2);
-						pBank[1] = pAtual[1] + (j - 2);
+        if (f == -2)
+            return parede;
 
-						discoveryBank = true;
+        if (f == -1)
+            return foraMundo;
 
-					}
+        if (f == 3)
+            return banco;
+        if (f == 5)
+            return pastilhaPoder;
 
-				}
+        return 0;
+    }
 
-				if (indexArray == 12) {
-					// System.out.println(conversionMatrix[i][j]);
-					j++;
-					conversionMatrix[i][j] = array[indexArray];
-					indexArray++;
+    public int[][] getMatrizVisao() {
+        int matrizConvertida[][] = new int[5][5];
+        int array[] = new int[24];
 
-				} else {
-					conversionMatrix[i][j] = array[indexArray];
-					indexArray++;
-				}
+        array = sensor.getVisaoIdentificacao();
 
-			}
+        int indexArray = 0;
 
-		}
-		return conversionMatrix;
-	}
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
 
-	public int[][] getSmellMatrix() {
-		int conversionMatrix[][] = new int[3][3];
-		int array[] = new int[8];
+                if ((array[indexArray] >= 100 && array[indexArray] < 200))
+                    persinguindo = true;
+                if (array[indexArray] == 3) {
+                    procurandoBanco = true;
 
-		array = sensor.getAmbienteOlfatoLadrao();
+                    if (!descubriuBanco) {
 
-		int indexArray = 0;
+                        pBank[0] = pAtual[0] + (i - 2);
+                        pBank[1] = pAtual[1] + (j - 2);
 
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
+                        descubriuBanco = true;
 
-				if (indexArray == 4) {
-					// System.out.println(conversionMatrix[i][j]);
-					j++;
-					conversionMatrix[i][j] = array[indexArray];
-					indexArray++;
+                    }
 
-				} else {
-					conversionMatrix[i][j] = array[indexArray];
-					indexArray++;
-				}
+                }
 
-			}
+                if (indexArray == 12) {
+                    // System.out.println(matrizConvertida[i][j]);
+                    j++;
+                    matrizConvertida[i][j] = array[indexArray];
+                    indexArray++;
 
-		}
-		return conversionMatrix;
-	}
+                } else {
+                    matrizConvertida[i][j] = array[indexArray];
+                    indexArray++;
+                }
 
-	public void includeVisitedPoint(int action) {
-		int i = 0, j = 0;
-		Point matrixHash[][] = new Point[5][5];
+            }
 
-		matrixHash[1][2] = new Point(-1, 0);
-		matrixHash[2][1] = new Point(0, -1);
-		matrixHash[2][3] = new Point(0, +1);
-		matrixHash[3][2] = new Point(+1, 0);
+        }
+        return matrizConvertida;
+    }
 
-		if (action == 1) {
-			i = 1;
-			j = 2;
-		}
-		if (action == 2) {
-			i = 3;
-			j = 2;
-		}
-		if (action == 3) {
-			i = 2;
-			j = 3;
-		}
-		if (action == 4) {
-			i = 2;
-			j = 1;
-		}
+    public int[][] getMatrizOfalto() {
+        int matrizConvertida[][] = new int[3][3];
+        int array[] = new int[8];
 
-		int x = (int) (sensor.getPosicao().getY() + matrixHash[i][j].getX());
-		int y = (int) (sensor.getPosicao().getX() + matrixHash[i][j].getY());
+        array = sensor.getAmbienteOlfatoLadrao();
 
-		if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
-			matrixAlreadyVisited[x][y]++;
+        int indexArray = 0;
 
-	}
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
 
-	public int getTimesIVisitedThisPoint(int action) {
+                if (indexArray == 4) {
+                    j++;
+                    matrizConvertida[i][j] = array[indexArray];
+                    indexArray++;
 
-		int i = 0, j = 0;
-		Point matrixHash[][] = new Point[5][5];
+                } else {
+                    matrizConvertida[i][j] = array[indexArray];
+                    indexArray++;
+                }
 
-		matrixHash[1][2] = new Point(-1, 0);
-		matrixHash[2][1] = new Point(0, -1);
-		matrixHash[2][3] = new Point(0, +1);
-		matrixHash[3][2] = new Point(+1, 0);
+            }
 
-		if (action == 1) {
-			i = 1;
-			j = 2;
-		}
-		if (action == 2) {
-			i = 3;
-			j = 2;
-		}
-		if (action == 3) {
-			i = 2;
-			j = 3;
-		}
-		if (action == 4) {
-			i = 2;
-			j = 1;
-		}
+        }
+        return matrizConvertida;
+    }
 
-		int x = (int) (sensor.getPosicao().getY() + matrixHash[i][j].getX());
-		int y = (int) (sensor.getPosicao().getX() + matrixHash[i][j].getY());
+    public void incrementaPontoVisitado(int action) {
+        int i = 0, j = 0;
+        Point matrizHash[][] = new Point[5][5];
 
-		if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
-			return matrixAlreadyVisited[x][y];
-		else
-			return 0;
-	}
+        matrizHash[1][2] = new Point(-1, 0);
+        matrizHash[2][1] = new Point(0, -1);
+        matrizHash[2][3] = new Point(0, +1);
+        matrizHash[3][2] = new Point(+1, 0);
 
-	public int distanceManhattan(int x1, int y1, int x2, int y2) {
-		return (Math.abs(x1 - x2) + Math.abs(y1 - y2));
-	}
+        if (action == 1) {
+            i = 1;
+            j = 2;
+        }
+        if (action == 2) {
+            i = 3;
+            j = 2;
+        }
+        if (action == 3) {
+            i = 2;
+            j = 3;
+        }
+        if (action == 4) {
+            i = 2;
+            j = 1;
+        }
+
+        int x = (int) (sensor.getPosicao().getY() + matrizHash[i][j].getX());
+        int y = (int) (sensor.getPosicao().getX() + matrizHash[i][j].getY());
+
+        if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
+            matrizLocaisVisiatados[x][y]++;
+
+    }
+
+    public int getQuantidadeVezesVisitadoPonto(int action) {
+
+        int i = 0, j = 0;
+        Point matrizHash[][] = new Point[5][5];
+
+        matrizHash[1][2] = new Point(-1, 0);
+        matrizHash[2][1] = new Point(0, -1);
+        matrizHash[2][3] = new Point(0, +1);
+        matrizHash[3][2] = new Point(+1, 0);
+
+        if (action == 1) {
+            i = 1;
+            j = 2;
+        }
+        if (action == 2) {
+            i = 3;
+            j = 2;
+        }
+        if (action == 3) {
+            i = 2;
+            j = 3;
+        }
+        if (action == 4) {
+            i = 2;
+            j = 1;
+        }
+
+        int x = (int) (sensor.getPosicao().getY() + matrizHash[i][j].getX());
+        int y = (int) (sensor.getPosicao().getX() + matrizHash[i][j].getY());
+
+        if ((x >= 0 && x < 30) && (y >= 0 && y < 30))
+            return matrizLocaisVisiatados[x][y];
+        else
+            return 0;
+    }
+
+    public int distanceManhattan(int x1, int y1, int x2, int y2) {
+        return (Math.abs(x1 - x2) + Math.abs(y1 - y2));
+    }
 }
